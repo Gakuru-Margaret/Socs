@@ -847,3 +847,330 @@ input,textarea,select{font-family:inherit;color:#1E293B}
 .sidebar-item.active .sb-icon-svg{opacity:1;color:#10B981}
 .sidebar-item.active{background:#F0FDF4;color:#10B981;font-weight:600;border-left:3px solid #10B981;border-radius:0 var(--r-md) var(--r-md) 0}
 .sidebar-item{padding:10px 16px;gap:12px}
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE-FIRST RESPONSIVE SYSTEM — SOCS v6
+   Breakpoints: 480px | 768px | 1024px | 1280px
+   ═══════════════════════════════════════════════════════ */
+
+/* ── MOBILE HAMBURGER BUTTON ── */
+.mobile-menu-btn{
+  display:none;
+  background:none;border:none;cursor:pointer;
+  padding:8px;border-radius:var(--r-md);
+  color:#fff;flex-direction:column;gap:5px;
+  align-items:center;justify-content:center;
+}
+.mobile-menu-btn span{
+  display:block;width:20px;height:2px;
+  background:#fff;border-radius:2px;
+  transition:all .3s ease;
+}
+.mobile-menu-btn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.mobile-menu-btn.open span:nth-child(2){opacity:0}
+.mobile-menu-btn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+/* ── MOBILE OVERLAY ── */
+.sidebar-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.5);z-index:99;
+  opacity:0;transition:opacity .3s;
+}
+.sidebar-overlay.visible{opacity:1}
+
+/* ── BOTTOM NAV FOR MOBILE ── */
+.mobile-bottom-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;
+  background:#fff;border-top:1px solid #E2E8F0;
+  z-index:150;padding:0;
+  safe-area-inset-bottom:env(safe-area-inset-bottom);
+}
+.mobile-bottom-nav-inner{
+  display:flex;align-items:center;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.mobile-nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  gap:3px;padding:10px 4px 8px;background:none;border:none;
+  cursor:pointer;color:#94A3B8;font-size:.65rem;font-weight:600;
+  transition:color .15s;min-height:56px;
+}
+.mobile-nav-item svg{flex-shrink:0}
+.mobile-nav-item.active{color:#10B981}
+.mobile-nav-item span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60px}
+
+/* ═══════════════════════════════════════════
+   LARGE DESKTOP — 1280px+
+   ═══════════════════════════════════════════ */
+@media(min-width:1280px){
+  .app-main{padding:28px 32px}
+  .overview-grid{grid-template-columns:1fr 280px 280px}
+}
+
+/* ═══════════════════════════════════════════
+   TABLET LANDSCAPE — max 1100px
+   ═══════════════════════════════════════════ */
+@media(max-width:1100px){
+  .overview-grid{grid-template-columns:1fr 1fr}
+  .ov-wide{grid-column:span 2}
+  .features-grid{grid-template-columns:repeat(2,1fr)}
+  .feature-card.feature-wide{grid-column:span 2}
+  .tech-inner{grid-template-columns:1fr}
+  .supply-layout{grid-template-columns:1fr}
+  .incident-layout{grid-template-columns:1fr}
+  .absence-layout{grid-template-columns:1fr}
+  .profile-layout{grid-template-columns:1fr}
+  .task-assign-layout{grid-template-columns:1fr}
+  .sections-layout{grid-template-columns:1fr}
+  .overview-stats,.sv-supply-stats,.sm-status-strip{grid-template-columns:repeat(2,1fr)}
+  .stat-strip{grid-template-columns:repeat(2,1fr)}
+  .attendance-layout{grid-template-columns:1fr}
+  .checklist-layout{grid-template-columns:1fr}
+}
+
+/* ═══════════════════════════════════════════
+   TABLET PORTRAIT — max 900px
+   Sidebar slides out, hamburger appears
+   ═══════════════════════════════════════════ */
+@media(max-width:900px){
+  /* Show hamburger */
+  .mobile-menu-btn{display:flex}
+
+  /* Sidebar becomes drawer */
+  .app-sidebar{
+    transform:translateX(-100%);
+    transition:transform .3s ease;
+    z-index:200;
+    top:var(--nav-h);
+    box-shadow:4px 0 20px rgba(0,0,0,.15);
+  }
+  .app-sidebar.open{transform:translateX(0)}
+  .sidebar-overlay{display:block}
+
+  /* Main takes full width */
+  .app-main{margin-left:0;padding:18px}
+
+  /* Hero */
+  .hero{flex-direction:column;padding-top:100px;text-align:center}
+  .hero-cta{justify-content:center}
+  .hero-visual{display:none}
+  .hero-title{font-size:2.2rem}
+
+  /* Cards */
+  .staff-cards-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+
+  /* Overview */
+  .overview-stats,.sv-supply-stats,.sm-status-strip{grid-template-columns:repeat(2,1fr)}
+
+  /* Footer */
+  .footer-inner{grid-template-columns:1fr;gap:24px}
+  .problem-grid{grid-template-columns:1fr}
+
+  /* Features */
+  .features-grid{grid-template-columns:1fr}
+  .feature-card.feature-wide{grid-column:span 1;flex-direction:column}
+  .dashboard-preview{grid-template-columns:repeat(2,1fr)}
+
+  /* Messages */
+  .messages-layout{grid-template-columns:1fr;height:auto;min-height:600px}
+  .conv-list{width:100%;border-right:none;border-bottom:1px solid #E2E8F0;max-height:220px}
+  .chat-panel{min-height:400px}
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE — max 768px
+   ═══════════════════════════════════════════ */
+@media(max-width:768px){
+  :root{
+    --nav-h:56px;
+    --sidebar-w:260px;
+  }
+
+  /* Nav bar */
+  .app-nav-inner{padding:0 14px}
+  .nav-logo{font-size:1rem}
+  .live-clock{font-size:.9rem}
+  .live-date{display:none}
+  .conn-status span:last-child{display:none}
+
+  /* Main content */
+  .app-main{padding:14px;padding-bottom:80px} /* space for bottom nav */
+
+  /* Greeting */
+  .greeting-banner{padding:14px 16px;flex-direction:column;gap:8px;align-items:flex-start}
+  .greeting-text{font-size:1.15rem}
+  .shift-status{font-size:.75rem;padding:6px 12px}
+
+  /* Tab headers */
+  .tab-header h3{font-size:1.1rem}
+  .tab-header p{font-size:.82rem}
+  .tab-header{margin-bottom:14px}
+
+  /* Stats strips */
+  .stat-strip{grid-template-columns:repeat(2,1fr);gap:9px}
+  .strip-num{font-size:1.3rem}
+  .overview-stats,.sv-supply-stats,.sm-status-strip{grid-template-columns:repeat(2,1fr);gap:9px}
+  .ov-num{font-size:1.5rem}
+
+  /* Cards */
+  .card{padding:16px;border-radius:16px}
+
+  /* Attendance */
+  .attendance-layout{grid-template-columns:1fr;gap:12px}
+  .clock-card{padding:20px 16px}
+  .clock-time{font-size:2rem}
+
+  /* Checklist */
+  .checklist-layout{grid-template-columns:1fr;gap:12px}
+  .checklist-progress-card{flex-direction:row;padding:16px;gap:20px}
+  .progress-circle-wrap{width:90px;height:90px;flex-shrink:0}
+  .progress-ring{width:90px;height:90px}
+  .progress-center{width:90px;height:90px}
+  .progress-pct{font-size:1.1rem}
+
+  /* Supply grid */
+  .supply-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .supply-item{padding:12px 6px 9px}
+  .si-icon{width:38px;height:38px;font-size:.68rem}
+  .supply-layout{grid-template-columns:1fr}
+
+  /* Staff cards */
+  .staff-cards-grid{grid-template-columns:1fr;gap:10px}
+  .sm-status-strip{grid-template-columns:repeat(2,1fr);gap:9px}
+
+  /* Forms */
+  .form-row-inline{flex-direction:column;gap:8px}
+  .type-chips{gap:6px}
+  .type-chip span{padding:6px 10px;font-size:.78rem}
+
+  /* Filter tabs */
+  .filter-tabs{gap:4px;flex-wrap:wrap}
+  .filter-tab{padding:5px 10px;font-size:.74rem}
+
+  /* Task assign */
+  .task-assign-layout{grid-template-columns:1fr;gap:14px}
+  .ta-summary-row{grid-template-columns:repeat(3,1fr);gap:8px}
+  .ta-sum-num{font-size:1.4rem}
+
+  /* Overview grid */
+  .overview-grid{grid-template-columns:1fr;gap:12px}
+  .ov-wide{grid-column:span 1}
+
+  /* Staff table — make it scroll */
+  .staff-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .staff-table{min-width:600px}
+
+  /* Sections */
+  .sections-layout{grid-template-columns:1fr;gap:14px}
+
+  /* Absence layout */
+  .absence-layout{grid-template-columns:1fr;gap:12px}
+
+  /* Profile */
+  .profile-layout{grid-template-columns:1fr;gap:14px}
+  .score-layout{flex-direction:column;align-items:flex-start;gap:14px}
+
+  /* Modals */
+  .modal-overlay{padding:10px}
+  .modal-box{border-radius:20px;max-height:95vh}
+
+  /* Panel headers */
+  .panel-header{flex-direction:column;align-items:flex-start;gap:10px}
+
+  /* Messages */
+  .messages-layout{min-height:500px}
+  .conv-list{max-height:180px}
+  .chat-input-row{padding:10px 12px;gap:8px}
+
+  /* Worker modal */
+  .wm-stats-row{grid-template-columns:repeat(2,1fr)}
+  .wm-hero{padding:16px}
+
+  /* Wellness buttons */
+  .wellness-btns{gap:8px}
+  .wellness-btn{padding:12px 6px;min-width:70px}
+
+  /* Notification items */
+  .notif-item{padding:12px}
+
+  /* Upload zone */
+  .upload-zone{padding:20px 14px}
+
+  /* Show mobile bottom nav */
+  .mobile-bottom-nav{display:block}
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE SMALL — max 480px
+   ═══════════════════════════════════════════ */
+@media(max-width:480px){
+  .app-main{padding:10px;padding-bottom:80px}
+  .greeting-text{font-size:1rem}
+  .stat-strip{grid-template-columns:repeat(2,1fr);gap:8px}
+  .strip-stat{padding:12px 8px}
+  .strip-num{font-size:1.2rem}
+  .supply-grid{grid-template-columns:repeat(2,1fr)}
+  .overview-stats,.sv-supply-stats{grid-template-columns:repeat(2,1fr);gap:8px}
+  .ov-stat{padding:14px 10px}
+  .ov-num{font-size:1.3rem}
+  .sm-status-strip{grid-template-columns:repeat(2,1fr)}
+  .ta-summary-row{grid-template-columns:1fr;gap:8px}
+  .filter-tabs{gap:3px}
+  .filter-tab{padding:4px 9px;font-size:.72rem}
+  .card{padding:14px;border-radius:14px}
+  .tab-header h3{font-size:1rem}
+  .btn{padding:9px 16px;font-size:.88rem}
+  .btn-full{padding:12px}
+  .clock-time{font-size:1.8rem}
+  .staff-cards-grid{grid-template-columns:1fr}
+  .wm-stats-row{grid-template-columns:repeat(2,1fr)}
+  .mobile-nav-item span{font-size:.6rem}
+  .checklist-progress-card{flex-direction:column;align-items:center}
+}
+
+/* ── TOUCH IMPROVEMENTS ── */
+@media(hover:none) and (pointer:coarse){
+  /* Bigger tap targets on touch devices */
+  .btn{min-height:44px}
+  .filter-tab{min-height:36px;padding:8px 14px}
+  .sidebar-item{min-height:44px}
+  .task-item{min-height:48px}
+  .supply-item{min-height:80px}
+  .dropdown-item{padding:14px 16px;min-height:44px}
+  .type-chip span{padding:9px 14px}
+  .wellness-btn{min-height:60px}
+  .mobile-nav-item{min-height:56px}
+  /* Remove hover effects that don't work on touch */
+  .staff-card:hover{transform:none}
+  .supply-item:hover{transform:none}
+  .sidebar-item:hover{background:#F0FDF4}
+}
+
+/* ── SAFE AREA (iPhone notch/home bar) ── */
+@supports(padding:max(0px)){
+  .app-nav{
+    padding-left:max(0px, env(safe-area-inset-left));
+    padding-right:max(0px, env(safe-area-inset-right));
+  }
+  .mobile-bottom-nav{
+    padding-bottom:max(8px, env(safe-area-inset-bottom));
+  }
+  .app-main{
+    padding-bottom:max(80px, calc(60px + env(safe-area-inset-bottom)));
+  }
+}
+
+/* ── SCROLLBAR HIDDEN ON MOBILE ── */
+@media(max-width:768px){
+  .sidebar-nav::-webkit-scrollbar,
+  .attendance-log::-webkit-scrollbar,
+  .task-list::-webkit-scrollbar,
+  .chat-messages::-webkit-scrollbar{width:0}
+}
+
+/* ── PRINT MEDIA ── */
+@media print{
+  .app-nav,.app-sidebar,.mobile-bottom-nav,.mobile-menu-btn{display:none!important}
+  .app-main{margin-left:0;padding:0}
+  .card{box-shadow:none;border:1px solid #ccc}
+}

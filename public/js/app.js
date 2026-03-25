@@ -259,6 +259,7 @@ function switchTab(tab) {
   if(gr) gr.style.display=isMsg?'none':'';
   if(an) an.style.display=isMsg?'none':'';
   loadTab(tab);
+  updateMobileNav(tab);
 }
 
 function loadTab(tab) {
@@ -1311,6 +1312,64 @@ async function loadMsgBadge() {
 function initUserMenu() {
   $('user-menu')?.addEventListener('click',e=>{e.stopPropagation();$('user-dropdown')?.classList.toggle('hidden');});
   document.addEventListener('click',()=>$('user-dropdown')?.classList.add('hidden'));
+
+  // ── MOBILE HAMBURGER ──
+  const menuBtn  = $('mobile-menu-btn');
+  const sidebar  = document.querySelector('.app-sidebar');
+  const overlay  = $('sidebar-overlay');
+
+  function openSidebar(){
+    sidebar?.classList.add('open');
+    overlay?.classList.add('visible');
+    menuBtn?.classList.add('open');
+    document.body.style.overflow='hidden';
+  }
+  function closeSidebar(){
+    sidebar?.classList.remove('open');
+    overlay?.classList.remove('visible');
+    menuBtn?.classList.remove('open');
+    document.body.style.overflow='';
+  }
+
+  menuBtn?.addEventListener('click', e=>{
+    e.stopPropagation();
+    sidebar?.classList.contains('open') ? closeSidebar() : openSidebar();
+  });
+  overlay?.addEventListener('click', closeSidebar);
+
+  // Close sidebar when nav item tapped on mobile
+  document.querySelectorAll('.sidebar-item').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ if(window.innerWidth<=900) closeSidebar(); });
+  });
+
+  // ── MOBILE BOTTOM NAV ──
+  buildMobileBottomNav();
+}
+
+function buildMobileBottomNav(){
+  const nav = $('mobile-bottom-nav-inner'); if(!nav) return;
+  const role = S.user?.role || 'cleaner';
+
+  // Pick top 5 most important tabs per role for bottom nav
+  const bottomNavItems = {
+    cleaner:    [{tab:'attendance',label:'Attendance',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'},{tab:'checklist',label:'Tasks',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>'},{tab:'supply-staff',label:'Supplies',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>'},{tab:'messages',label:'Messages',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'},{tab:'notifications',label:'Alerts',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>'}],
+    watchman:   [{tab:'attendance',label:'Attendance',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'},{tab:'checklist',label:'Tasks',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>'},{tab:'incidents',label:'Incidents',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'},{tab:'messages',label:'Messages',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'},{tab:'notifications',label:'Alerts',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>'}],
+    assistant:  [{tab:'sv-attendance',label:'Attendance',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>'},{tab:'sv-supplies',label:'Supplies',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg>'},{tab:'sv-leave',label:'Leave',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>'},{tab:'messages',label:'Messages',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'},{tab:'notifications',label:'Alerts',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>'}],
+    supervisor: [{tab:'overview',label:'Overview',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'},{tab:'staff-mgmt',label:'Staff',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>'},{tab:'sv-supplies',label:'Supplies',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg>'},{tab:'messages',label:'Messages',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'},{tab:'notifications',label:'Alerts',svg:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>'}],
+  };
+
+  const items = bottomNavItems[role] || bottomNavItems.cleaner;
+  nav.innerHTML = items.map(item=>`
+    <button class="mobile-nav-item ${S.activeTab===item.tab?'active':''}" data-tab="${item.tab}" onclick="switchTab('${item.tab}');updateMobileNav('${item.tab}')">
+      ${item.svg}
+      <span>${item.label}</span>
+    </button>`).join('');
+}
+
+function updateMobileNav(activeTab){
+  document.querySelectorAll('.mobile-nav-item').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.tab===activeTab);
+  });
 }
 
 // ── LOGOUT ──────────────────────────────────────────────────
@@ -1328,3 +1387,4 @@ window.quickApproveSupply=quickApproveSupply; window.quickRejectSupply=quickReje
 window.approveLeave=approveLeave; window.declineLeave=declineLeave;
 window.addMemberToSection=addMemberToSection; window.removeMember=removeMember; window.deleteSection=deleteSection;
 window.openChat=openChat; window.sendMessage=sendMessage;
+window.updateMobileNav=updateMobileNav;
