@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOCS — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:        #F3F4F6;
+        --surface:    #FFFFFF;
+        --surface-2:  #F8FAFC;
+      --surface-3:  #E5E7EB;
+      --accent:     #10B981;
+      --accent-dim: #059669;
+      --red:        #EF4444;
+      --sky:        #3B82F6;
+      --border:     rgba(0,0,0,0.08);
+      --border-mid: rgba(0,0,0,0.14);
+      --text-1: #1E293B;
+      --text-2: #64748B;
+      --text-3: #9CA3AF;
+      --font-display: 'Syne', sans-serif;
+      --font-mono:    'Space Mono', monospace;
+      --font-body:    'DM Sans', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font-body);
+      background: #F1F5F9;
+      color: #1E293B;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button { font-family: var(--font-body); cursor: pointer; }
+
+    /* ── GRID ── */
+    .wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 100vh;
+    }
+
+    /* ════════════════════════
+       LEFT PANEL
+    ════════════════════════ */
+    .left {
+      background: linear-gradient(150deg, var(--surface) 0%, var(--surface-2) 100%);
+      border-right: 1px solid #E2E8F0;
+      padding: 52px 56px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .left::after {
+      content: '';
+      position: absolute;
+      width: 480px; height: 480px;
+      background: radial-gradient(circle, rgba(0,229,160,0.09) 0%, transparent 70%);
+      top: -60px; right: -140px;
+      pointer-events: none;
+    }
+
+    .logo {
+      font-family: var(--font-mono);
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      margin-bottom: 72px;
+      display: inline-block;
+      position: relative;
+      z-index: 1;
+    }
+    .logo .b { color: var(--accent); }
+
+    .left-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 44px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .headline {
+      font-family: var(--font-display);
+      font-size: 3.1rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+    .headline .g { color: var(--accent); }
+
+    .sub {
+      color: var(--text-2);
+      font-size: 1.02rem;
+      line-height: 1.72;
+      max-width: 360px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .chip {
+      padding: 9px 18px;
+      border-radius: 24px;
+      font-size: 0.87rem;
+      font-weight: 600;
+      border: 1.5px solid var(--border-mid);
+      color: var(--text-2);
+      background: rgba(255,255,255,0.04);
+    }
+    .chip.g { border-color: rgba(0,229,160,0.4); color: var(--accent); background: rgba(0,229,160,0.06); }
+    .chip.b { border-color: rgba(62,207,255,0.35); color: var(--sky); background: rgba(62,207,255,0.06); }
+
+    .left-foot {
+      font-size: 0.8rem;
+      color: var(--text-3);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ════════════════════════
+       RIGHT PANEL
+    ════════════════════════ */
+    .right {
+      background: #F1F5F9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 52px 72px;
+      overflow-y: auto;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 460px;
+    }
+
+    .card h1 {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    .card .sub-h {
+      color: var(--text-2);
+      font-size: 1.02rem;
+      margin-bottom: 38px;
+    }
+
+    /* ── ALERT ── */
+    #alert {
+      display: none;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 0.93rem;
+      margin-bottom: 26px;
+      border: 1.5px solid rgba(255,71,87,0.35);
+      background: rgba(255,71,87,0.08);
+      color: #ff7b87;
+    }
+    #alert.on  { display: block; }
+    #alert.ok  { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.08); color: #059669; }
+
+    /* ── FIELD ── */
+    .field { margin-bottom: 24px; }
+
+    .field-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      margin-bottom: 10px;
+    }
+    .field-label a {
+      color: var(--accent);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .inp-wrap {
+      position: relative;
+    }
+    .inp-wrap .icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-3);
+      pointer-events: none;
+      display: flex;
+    }
+    .inp-wrap input {
+      width: 100%;
+      background: #FFFFFF;
+      border: 1.5px solid rgba(0,0,0,.15);
+      border-radius: 11px;
+      padding: 16px 50px 16px 48px;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      color: #1E293B;
+      outline: none;
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+    .inp-wrap input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.12);
+    }
+    .inp-wrap input::placeholder { color: var(--text-3); }
+
+    .eye-btn {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-3);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+    }
+    .eye-btn:hover { color: var(--text-2); }
+
+    /* ── REMEMBER ── */
+    .remember {
+      margin-bottom: 28px;
+    }
+    .remember label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 0.93rem;
+      color: var(--text-2);
+      user-select: none;
+    }
+    .remember input[type=checkbox] {
+      width: 17px; height: 17px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* ── SIGN IN BTN ── */
+    .btn-main {
+      width: 100%;
+      padding: 17px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.02rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: background 0.18s, transform 0.18s, box-shadow 0.18s;
+      margin-bottom: 6px;
+    }
+    .btn-main:hover {
+      background: var(--accent-dim);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(16,185,129,0.28);
+    }
+    .btn-main:disabled { opacity: 0.65; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .spin {
+      width: 18px; height: 18px;
+      border: 2.5px solid #fff;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: rot 0.65s linear infinite;
+      display: none;
+      flex-shrink: 0;
+    }
+    @keyframes rot { to { transform: rotate(360deg); } }
+
+    /* ── DIVIDER ── */
+    .div-line {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 30px 0;
+      font-size: 0.82rem;
+      color: var(--text-3);
+    }
+    .div-line::before, .div-line::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── DEMO BTNs ── */
+    .demo-group {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      margin-bottom: 26px;
+    }
+    .demo-btn {
+      width: 100%;
+      background: #FFFFFF;
+      border: 1.5px solid var(--border-mid);
+      border-radius: 11px;
+      padding: 16px 20px;
+      text-align: left;
+      color: var(--text-2);
+      font-size: 0.96rem;
+      font-weight: 500;
+      transition: all 0.18s;
+    }
+    .demo-btn:hover {
+      border-color: var(--accent);
+      color: var(--text-1);
+      background: rgba(0,229,160,0.05);
+      transform: translateX(3px);
+    }
+
+    .help { text-align: center; font-size: 0.82rem; color: var(--text-3); }
+
+    /* ── MOBILE ── */
+    @media (max-width: 820px) {
+      .wrap { grid-template-columns: 1fr; }
+      .left  { display: none; }
+      .right { padding: 40px 28px; align-items: flex-start; padding-top: 60px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ═══ LEFT ═══ -->
+  <div class="left">
+    <a href="/" class="logo"><span class="b">[</span>SOCS<span class="b">]</span></a>
+
+    <div class="left-body">
+      <div>
+        <h2 class="headline">Your shift.<br>Your record.<br><span class="g">Verified.</span></h2>
+        <p class="sub">The digital ledger that replaces paper sign-in books with a single, browser-based source of truth.</p>
+      </div>
+      <div class="chips">
+        <span class="chip g">🧹 Cleaner</span>
+        <span class="chip">🔒 Watchman</span>
+        <span class="chip">🗂️ Office Assistant</span>
+        <span class="chip b">📊 Supervisor</span>
+      </div>
+    </div>
+
+    <p class="left-foot">SOCS — Zetech University, 2026</p>
+  </div>
+
+  <!-- ═══ RIGHT ═══ -->
+  <div class="right">
+    <div class="card">
+      <h1>Welcome Back</h1>
+      <p class="sub-h">Sign in to access your dashboard</p>
+
+      <div id="alert"></div>
+
+      <!-- Staff ID -->
+      <div class="field">
+        <div class="field-label">Staff ID / Email</div>
+        <div class="inp-wrap">
+          <span class="icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </span>
+          <input type="text" id="staff-id" placeholder="e.g. STF-001 or email@institution.ke" autocomplete="username" />
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="field">
+        <div class="field-label">
+          Password / PIN
+          <a href="#">Forgot?</a>
+        </div>
+        <div class="inp-wrap">
+          <span class="icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </span>
+          <input type="password" id="password" placeholder="Enter your PIN or password" autocomplete="current-password" />
+          <button class="eye-btn" id="eye-btn" type="button">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Remember -->
+      <div class="remember">
+        <label>
+          <input type="checkbox" id="remember" />
+          Remember this device
+        </label>
+      </div>
+
+      <!-- Sign In -->
+      <button class="btn-main" id="login-btn" type="button">
+        <span id="btn-txt">Sign In</span>
+        <div class="spin" id="spin"></div>
+      </button>
+
+      <div class="div-line">Quick Access Demo</div>
+
+      <div class="demo-group">
+        <button class="demo-btn" data-id="STF-001" data-pw="demo123">🧹 &nbsp;Login as Cleaner</button>
+        <button class="demo-btn" data-id="STF-002" data-pw="demo123">🔒 &nbsp;Login as Watchman</button>
+        <button class="demo-btn" data-id="SUP-001" data-pw="demo123">📊 &nbsp;Login as Supervisor</button>
+      </div>
+
+      <p class="help">Having trouble? Contact your facility supervisor.</p>
+    </div>
+  </div>
+
+</div>
+<script>
+  // Toggle password
+  document.getElementById('eye-btn').onclick = () => {
+    const p = document.getElementById('password');
+    p.type = p.type === 'password' ? 'text' : 'password';
+  };
+
+  // Demo buttons
+  document.querySelectorAll('.demo-btn').forEach(b => {
+    b.onclick = () => {
+      document.getElementById('staff-id').value = b.dataset.id;
+      document.getElementById('password').value = b.dataset.pw;
+      doLogin(b.dataset.id, b.dataset.pw);
+    };
+  });
+
+  // Main button
+  document.getElementById('login-btn').onclick = () => {
+    const id = document.getElementById('staff-id').value.trim();
+    const pw = document.getElementById('password').value;
+    if (!id || !pw) { showAlert('Please enter your Staff ID and password.'); return; }
+    doLogin(id, pw);
+  };
+
+  // Enter key
+  document.onkeydown = e => { if (e.key === 'Enter') document.getElementById('login-btn').click(); };
+
+  function showAlert(msg, type) {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = 'on' + (type === 'ok' ? ' ok' : '');
+  }
+
+  function setLoading(on) {
+    document.getElementById('btn-txt').style.display = on ? 'none' : '';
+    document.getElementById('spin').style.display = on ? 'block' : 'none';
+    document.getElementById('login-btn').disabled = on;
+  }
+
+  async function doLogin(staffId, password) {
+    setLoading(true);
+    document.getElementById('alert').className = '';
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ staffId, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Login failed');
+      localStorage.setItem('socs_token', data.token);
+      localStorage.setItem('socs_user', JSON.stringify(data.user));
+      window.location.href = '/dashboard.html';
+    } catch (err) {
+      // Demo fallback — works without backend
+      const DEMO = {
+        'STF-001': { id:'STF-001', name:'Margaret Gakuru',  role:'cleaner',    initials:'MG' },
+        'STF-002': { id:'STF-002', name:'Joseph Kamau',     role:'watchman',   initials:'JK' },
+        'STF-003': { id:'STF-003', name:'Alice Wanjiru',    role:'assistant',  initials:'AW' },
+        'SUP-001': { id:'SUP-001', name:'Barack Ouko',      role:'supervisor', initials:'BO' },
+      };
+      const user = DEMO[staffId.toUpperCase()];
+      if (user && password === 'demo123') {
+        localStorage.setItem('socs_token', 'demo_' + Date.now());
+        localStorage.setItem('socs_user', JSON.stringify(user));
+        window.location.href = '/dashboard.html';
+      } else {
+        showAlert('Invalid credentials. Use STF-001 / demo123 to try the demo.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0D1F2D" />
+  <meta name="description" content="Staff Operational Coordination System - Digital Ledger for modern workplace management" />
+  <title>SOCS – Staff Operational Coordination System</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/main.css" />
+</head>
+<body class="landing-page">
+
+  <!-- NOISE OVERLAY -->
+  <div class="noise-overlay"></div>
+
+  <!-- NAV -->
+  <nav class="nav-bar" id="navbar">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <span class="logo-bracket">[</span>SOCS<span class="logo-bracket">]</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#about">About</a>
+        <a href="/login.html" class="btn btn-ghost">Sign In</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-grid-bg"></div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Digital Workplace Ledger — Kenya's Institutional Staff Platform
+      </div>
+      <h1 class="hero-title">
+        Replace the<br />
+        <span class="title-accent">Paper Book.</span><br />
+        Own Your Data.
+      </h1>
+      <p class="hero-sub">
+        SOCS turns manual sign-in books, verbal instructions, and WhatsApp chaos
+        into a single, browser-based source of truth — for cleaners, watchmen,
+        and office assistants.
+      </p>
+      <div class="hero-cta">
+        <a href="/login.html" class="btn btn-primary btn-lg">
+          <span>Get Started</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#features" class="btn btn-outline btn-lg">See Features</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-num">4</span>
+          <span class="stat-label">Core Modules</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num">PWA</span>
+          <span class="stat-label">Works Offline</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num">RBAC</span>
+          <span class="stat-label">Role-Based Access</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="phone-mockup">
+        <div class="phone-screen">
+          <div class="phone-header">
+            <span class="phone-time" id="phone-clock">08:32</span>
+            <span class="phone-title">SOCS</span>
+          </div>
+          <div class="phone-greeting">Good morning, Margaret</div>
+          <div class="phone-card card-green">
+            <div class="card-icon">✓</div>
+            <div>
+              <div class="card-label">Clock-In</div>
+              <div class="card-time">08:01 AM — Recorded</div>
+            </div>
+          </div>
+          <div class="phone-section-title">Today's Duties</div>
+          <div class="phone-task done">
+            <span class="task-check">✓</span> Mop Lab 1
+          </div>
+          <div class="phone-task done">
+            <span class="task-check">✓</span> Clean Windows — Block B
+          </div>
+          <div class="phone-task pending">
+            <span class="task-check">○</span> Restock Washrooms
+          </div>
+          <div class="phone-task pending">
+            <span class="task-check">○</span> Sanitize Common Areas
+          </div>
+          <div class="phone-supply-btn">
+            📦 Report Supply Shortage
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM STRIP -->
+  <section class="problem-strip">
+    <div class="container">
+      <div class="problem-grid">
+        <div class="problem-item">
+          <span class="problem-icon">📖</span>
+          <span class="problem-text">Ghost Signing in Paper Books</span>
+          <span class="problem-arrow">→</span>
+          <span class="problem-fix">Timestamped Digital Ledger</span>
+        </div>
+        <div class="problem-item">
+          <span class="problem-icon">🗣️</span>
+          <span class="problem-text">Verbal Instructions Forgotten</span>
+          <span class="problem-arrow">→</span>
+          <span class="problem-fix">Persistent Duty Checklist</span>
+        </div>
+        <div class="problem-item">
+          <span class="problem-icon">🧹</span>
+          <span class="problem-text">Mop Shortages Reported Late</span>
+          <span class="problem-arrow">→</span>
+          <span class="problem-fix">Instant Supply Ledger</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">System Modules</div>
+        <h2 class="section-title">Four Modules.<br />One Digital Ledger.</h2>
+        <p class="section-sub">Every feature designed for field staff — cleaners, watchmen, and office assistants — on basic smartphones.</p>
+      </div>
+      <div class="features-grid">
+
+        <div class="feature-card feature-primary">
+          <div class="feature-num">01</div>
+          <div class="feature-icon-lg">🕐</div>
+          <h3>Digital Attendance</h3>
+          <p>One-tap Clock-In / Clock-Out with server timestamps. No more ghost signing. Every entry is permanent and verifiable.</p>
+          <ul class="feature-list">
+            <li>GPS-verified timestamps</li>
+            <li>Shift history & summaries</li>
+            <li>Late arrival flags</li>
+          </ul>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-num">02</div>
+          <div class="feature-icon-lg">📋</div>
+          <h3>Duty Checklist</h3>
+          <p>Daily chores assigned per role. Staff tick off tasks as they go. Supervisors see real-time progress.</p>
+          <ul class="feature-list">
+            <li>Role-assigned task lists</li>
+            <li>Auto-reset each morning</li>
+            <li>Photo proof upload</li>
+          </ul>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-num">03</div>
+          <div class="feature-icon-lg">📦</div>
+          <h3>Supply & Tools Ledger</h3>
+          <p>Report shortages of sugar, water, tissue, mops, or towels. Managers approve requests in seconds.</p>
+          <ul class="feature-list">
+            <li>Pantry & cleaning supplies</li>
+            <li>One-tap shortage alerts</li>
+            <li>Request approval workflow</li>
+          </ul>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-num">04</div>
+          <div class="feature-icon-lg">🚨</div>
+          <h3>Incident Logger</h3>
+          <p>Watchmen report breakages or security alerts instantly. Upload photo evidence. Supervisors notified in real time.</p>
+          <ul class="feature-list">
+            <li>Categorized incident reports</li>
+            <li>Photo evidence upload</li>
+            <li>Real-time Socket.IO alerts</li>
+          </ul>
+        </div>
+
+        <div class="feature-card feature-wide">
+          <div class="feature-num">05</div>
+          <div class="feature-icon-lg">📊</div>
+          <h3>Supervisor Dashboard</h3>
+          <p>A master view showing live attendance, task completion rates, pending supply requests, and open incidents — all from one screen. Manage by exception, not by walking every room.</p>
+          <div class="dashboard-preview">
+            <div class="dash-stat">
+              <span class="dash-num">18/25</span>
+              <span class="dash-lbl">Staff Clocked In</span>
+            </div>
+            <div class="dash-stat">
+              <span class="dash-num">73%</span>
+              <span class="dash-lbl">Tasks Complete</span>
+            </div>
+            <div class="dash-stat">
+              <span class="dash-num">3</span>
+              <span class="dash-lbl">Pending Requests</span>
+            </div>
+            <div class="dash-stat">
+              <span class="dash-num">1</span>
+              <span class="dash-lbl">Open Incident</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH STACK -->
+  <section class="tech-section" id="about">
+    <div class="container">
+      <div class="tech-inner">
+        <div class="tech-text">
+          <div class="section-tag">Technology Stack</div>
+          <h2>Built for Low-End Phones.<br />Backed by Enterprise Tech.</h2>
+          <p>No app download needed. Works on any browser — Chrome, Safari, Firefox — on the most affordable smartphones in Kenya.</p>
+          <div class="tech-badges">
+            <span class="tech-badge">Node.js</span>
+            <span class="tech-badge">Express.js</span>
+            <span class="tech-badge">PostgreSQL</span>
+            <span class="tech-badge">Prisma ORM</span>
+            <span class="tech-badge">Socket.IO</span>
+            <span class="tech-badge">Tailwind CSS</span>
+            <span class="tech-badge">PWA</span>
+            <span class="tech-badge">bcrypt</span>
+            <span class="tech-badge">JWT Auth</span>
+            <span class="tech-badge">RBAC</span>
+          </div>
+          <p class="tech-note">Hosted on Vercel (frontend) + Render (backend). Encrypted HTTPS traffic. Compliant with Kenya Data Protection Act, 2019.</p>
+        </div>
+        <div class="tech-arch">
+          <div class="arch-layer arch-client">
+            <span class="arch-icon">📱</span>
+            <div>
+              <strong>User Devices</strong>
+              <small>Chrome / Safari / Mobile</small>
+            </div>
+          </div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-layer arch-server">
+            <span class="arch-icon">⚙️</span>
+            <div>
+              <strong>Node.js + Express</strong>
+              <small>API + Socket.IO Server</small>
+            </div>
+          </div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-layer arch-db">
+            <span class="arch-icon">🗄️</span>
+            <div>
+              <strong>PostgreSQL</strong>
+              <small>Digital Vault — Prisma ORM</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-box">
+        <h2>Ready to Replace the Paper Book?</h2>
+        <p>Join cleaners, watchmen, and supervisors on SOCS — the digital ledger built for Kenyan institutions.</p>
+        <a href="/login.html" class="btn btn-primary btn-lg">
+          <span>Sign In to SOCS</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <span class="nav-logo"><span class="logo-bracket">[</span>SOCS<span class="logo-bracket">]</span></span>
+          <p>Staff Operational Coordination System<br />Zetech University — ICT Department, 2026</p>
+          <p class="footer-author">By Margaret Gakuru Mukuhi</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-col">
+            <strong>Modules</strong>
+            <a href="/dashboard.html">Attendance</a>
+            <a href="/dashboard.html">Duty Checklist</a>
+            <a href="/dashboard.html">Supply Ledger</a>
+            <a href="/dashboard.html">Incident Logger</a>
+          </div>
+          <div class="footer-col">
+            <strong>Access</strong>
+            <a href="/login.html">Staff Login</a>
+            <a href="/dashboard.html">Supervisor Dashboard</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 SOCS — Zetech University</span>
+        <span>Kenya Data Protection Act, 2019 Compliant</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/landing.js"></script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+// Prisma Schema — SOCS v5
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  cleaner
+  watchman
+  assistant
+  supervisor
+  admin
+}
+
+enum SupplyStatus {
+  pending
+  approved
+  rejected
+  fulfilled
+}
+
+enum LeaveStatus {
+  pending
+  approved
+  declined
+}
+
+enum IncidentSeverity {
+  low
+  medium
+  high
+  critical
+}
+
+enum IncidentStatus {
+  open
+  in_progress
+  resolved
+  closed
+}
+
+enum Urgency {
+  normal
+  urgent
+}
+
+enum TaskPriority {
+  normal
+  high
+  urgent
+}
+
+enum AnnouncementTarget {
+  all
+  cleaner
+  watchman
+  assistant
+  supervisor
+}
+
+model User {
+  id               String          @id @default(uuid())
+  staffId          String          @unique
+  name             String
+  email            String?         @unique
+  phone            String?
+  password         String
+  role             Role            @default(cleaner)
+  section          String?
+  avatarUrl        String?
+  isActive         Boolean         @default(true)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  attendance       Attendance[]
+  taskCompletions  TaskCompletion[]
+  supplies         SupplyRequest[]
+  incidents        Incident[]
+  photoProofs      PhotoProof[]
+  leaveRequests    LeaveRequest[]
+  sentMessages     Message[]       @relation("SentMessages")
+  receivedMessages Message[]       @relation("ReceivedMessages")
+  assignedTasks    AssignedTask[]  @relation("AssignedTo")
+  createdTasks     AssignedTask[]  @relation("AssignedBy")
+  notifications    Notification[]
+  sectionMembers   SectionMember[]
+  announcements    Announcement[]
+
+  @@map("users")
+}
+
+model Attendance {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  clockIn     DateTime  @default(now())
+  clockOut    DateTime?
+  hoursWorked Float?
+  isLate      Boolean   @default(false)
+  shiftDate   DateTime  @default(now()) @db.Date
+  createdAt   DateTime  @default(now())
+
+  @@map("attendance")
+}
+
+model DutyTask {
+  id           String          @id @default(uuid())
+  name         String
+  location     String
+  description  String?
+  assignedRole Role
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+
+  completions  TaskCompletion[]
+
+  @@map("duty_tasks")
+}
+
+model TaskCompletion {
+  id          String    @id @default(uuid())
+  taskId      String
+  task        DutyTask  @relation(fields: [taskId], references: [id])
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  completedAt DateTime  @default(now())
+  taskDate    DateTime  @default(now()) @db.Date
+  proofPhoto  String?
+  notes       String?
+
+  @@unique([taskId, userId, taskDate])
+  @@map("task_completions")
+}
+
+model AssignedTask {
+  id           String       @id @default(uuid())
+  name         String
+  location     String
+  notes        String?
+  priority     TaskPriority @default(normal)
+  dueTime      String?
+  assignedToId String?
+  assignedTo   User?        @relation("AssignedTo", fields: [assignedToId], references: [id])
+  assignedById String
+  assignedBy   User         @relation("AssignedBy", fields: [assignedById], references: [id])
+  groupTarget  String?
+  isDone       Boolean      @default(false)
+  completedAt  DateTime?
+  taskDate     DateTime     @default(now()) @db.Date
+  createdAt    DateTime     @default(now())
+
+  @@map("assigned_tasks")
+}
+
+model SupplyRequest {
+  id          String       @id @default(uuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+  itemName    String
+  itemIcon    String?
+  category    String?
+  urgency     Urgency      @default(normal)
+  status      SupplyStatus @default(pending)
+  notes       String?
+  approvedBy  String?
+  approvedAt  DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("supply_requests")
+}
+
+model LeaveRequest {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  type        String
+  leaveDate   DateTime    @db.Date
+  returnDate  DateTime?   @db.Date
+  reason      String
+  status      LeaveStatus @default(pending)
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  createdAt   DateTime    @default(now())
+
+  @@map("leave_requests")
+}
+
+model Incident {
+  id          String           @id @default(uuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id])
+  type        String
+  location    String
+  description String
+  severity    IncidentSeverity @default(medium)
+  status      IncidentStatus   @default(open)
+  photoUrl    String?
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@map("incidents")
+}
+
+model Message {
+  id        String    @id @default(uuid())
+  fromId    String
+  from      User      @relation("SentMessages", fields: [fromId], references: [id])
+  toId      String
+  to        User      @relation("ReceivedMessages", fields: [toId], references: [id])
+  text      String
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@map("messages")
+}
+
+model Announcement {
+  id        String             @id @default(uuid())
+  title     String
+  body      String
+  priority  String             @default("normal")
+  target    AnnouncementTarget @default(all)
+  authorId  String
+  author    User               @relation(fields: [authorId], references: [id])
+  createdAt DateTime           @default(now())
+
+  @@map("announcements")
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  type        String
+  title       String
+  body        String
+  isRead      Boolean  @default(false)
+  isDismissed Boolean  @default(false)
+  refId       String?
+  createdAt   DateTime @default(now())
+
+  @@map("notifications")
+}
+
+model Section {
+  id          String          @id @default(uuid())
+  name        String
+  icon        String          @default("🧹")
+  description String?
+  createdAt   DateTime        @default(now())
+
+  members     SectionMember[]
+
+  @@map("sections")
+}
+
+model SectionMember {
+  id        String  @id @default(uuid())
+  sectionId String
+  section   Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+
+  @@unique([sectionId, userId])
+  @@map("section_members")
+}
+
+model PhotoProof {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  taskId     String?
+  photoUrl   String
+  caption    String?
+  uploadedAt DateTime @default(now())
+
+  @@map("photo_proofs")
+}
+
+model AppState {
+  id           String   @id @default("singleton")
+  tasksResetAt DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("app_state")
+}
