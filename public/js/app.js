@@ -217,9 +217,23 @@ function initUI() {
 }
 
 function setAvatarAll(url, init) {
-  ['user-avatar','sb-avatar','profile-avatar-big'].forEach(id=>{
-    const el=$(id); if(!el) return;
-    el.innerHTML = url ? `<img src="${url}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>` : init;
+  const imgHtml = url
+    ? `<img src="${url}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`
+    : (init || '?');
+
+  // Update all avatar elements
+  ['user-avatar', 'sb-avatar', 'profile-avatar-big'].forEach(id => {
+    const el = $(id); if (!el) return;
+    if (url) {
+      el.innerHTML = `<img src="${url}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+    } else {
+      el.innerHTML = init || '?';
+    }
+  });
+
+  // Also update any img elements that are already loaded avatars
+  document.querySelectorAll('.user-avatar img, .sb-avatar img, .profile-avatar img').forEach(img => {
+    if (url) img.src = url;
   });
 }
 
@@ -451,14 +465,23 @@ function initPhotoUploads() {
   $('avatar-overlay')?.addEventListener('click', ()=>ai?.click());
   ai?.addEventListener('change', async e=>{
     const f=e.target.files[0]; if(!f) return;
+    // Show instant preview before upload
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const init=S.user.initials||(S.user.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase());
+      setAvatarAll(ev.target.result, init);
+    };
+    reader.readAsDataURL(f);
+    // Upload to server
     const form=new FormData(); form.append('avatar',f);
     try {
       const data=await API.upload('/upload/avatar',form);
-      S.user.avatarUrl=data.avatarUrl; localStorage.setItem('socs_user',JSON.stringify(S.user));
+      S.user.avatarUrl=data.avatarUrl;
+      localStorage.setItem('socs_user',JSON.stringify(S.user));
       const init=S.user.initials||(S.user.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase());
       setAvatarAll(data.avatarUrl, init);
-      toast('✅ Profile photo updated','success');
-    } catch(e) { toast('Upload failed','error'); }
+      toast('Profile photo updated','success');
+    } catch(e) { toast('Upload failed — check file size','error'); }
   });
 }
 
@@ -1202,24 +1225,56 @@ function dismissAnn(id) { const el=$(`ann-banner-${id}`); if(!el) return; el.sty
 // ═══════════════════════════════════════════════════════════
 //  MESSAGES
 // ═══════════════════════════════════════════════════════════
+let _msgListenersAdded = false; // prevent duplicate event listeners
+
 async function loadMessagesTab() {
-  activeChatPartnerId=null;
+  activeChatPartnerId = null;
   $('chat-panel')?.classList.add('hidden');
   $('chat-empty-state')?.classList.remove('hidden');
+
+  // Add event listeners only once
+  if (!_msgListenersAdded) {
+    $('chat-send-btn')?.addEventListener('click', sendMessage);
+    $('chat-input')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+    _msgListenersAdded = true;
+  }
+
   await loadConvList();
   loadMsgBadge();
-  $('chat-send-btn')?.addEventListener('click', sendMessage);
-  $('chat-input')?.addEventListener('keydown', e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} });
-  if(S.user.role!=='supervisor'&&S.user.role!=='assistant') {
-    // Staff auto-open supervisor conversation
+
+  // For staff (non-supervisor): auto-find and open supervisor chat
+  if (S.user.role !== 'supervisor' && S.user.role !== 'assistant') {
     try {
-      const data=await API.get('/auth/staff?role=supervisor');
-      const sv=data?.staff?.[0];
-      // Find supervisor id via conversations
-      const convData=await API.get('/messages/conversations');
-      const svConv=convData?.conversations?.find(c=>c.partner?.role==='supervisor');
-      if(svConv) openChat(svConv.partner.id);
-    } catch(e){}
+      // First try to find an existing conversation with supervisor
+      const convData = await API.get('/messages/conversations');
+      const svConv = convData?.conversations?.find(c =>
+        c.partner?.role === 'supervisor' || c.partner?.role === 'assistant'
+      );
+      if (svConv) {
+        openChat(svConv.partner.id);
+      } else {
+        // No conversation yet — find supervisor from staff list and show their profile ready to chat
+        const staffData = await API.get('/auth/staff');
+        const supervisors = (staffData?.staff || []).filter(s => s.role === 'supervisor' || s.role === 'assistant');
+        if (supervisors.length > 0) {
+          // Show supervisor as a conversation option even with no messages
+          const el = $('conv-list-inner'); if (el) {
+            el.innerHTML = supervisors.map(sv => {
+              const init = sv.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+              return `<div class="conv-item" onclick="openChat('${sv.id}')">
+                <div class="conv-avatar">${init}</div>
+                <div class="conv-info">
+                  <div class="conv-name">${sv.name} <span class="conv-role-tag">${cap(sv.role)}</span></div>
+                  <div class="conv-last">Tap to start a conversation</div>
+                </div>
+              </div>`;
+            }).join('');
+          }
+        }
+      }
+    } catch(e) { console.warn('Messages load error:', e); }
   }
 }
 
