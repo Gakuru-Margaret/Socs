@@ -1225,14 +1225,12 @@ function dismissAnn(id) { const el=$(`ann-banner-${id}`); if(!el) return; el.sty
 // ═══════════════════════════════════════════════════════════
 //  MESSAGES
 // ═══════════════════════════════════════════════════════════
-let _msgListenersAdded = false; // prevent duplicate event listeners
+let _msgListenersAdded = false;
 
 async function loadMessagesTab() {
   activeChatPartnerId = null;
   $('chat-panel')?.classList.add('hidden');
   $('chat-empty-state')?.classList.remove('hidden');
-
-  // Add event listeners only once
   if (!_msgListenersAdded) {
     $('chat-send-btn')?.addEventListener('click', sendMessage);
     $('chat-input')?.addEventListener('keydown', e => {
@@ -1240,65 +1238,42 @@ async function loadMessagesTab() {
     });
     _msgListenersAdded = true;
   }
-
   await loadConvList();
   loadMsgBadge();
-
-  // For staff (non-supervisor): auto-find and open supervisor chat
-  if (S.user.role !== 'supervisor' && S.user.role !== 'assistant') {
-    try {
-      // First try to find an existing conversation with supervisor
-      const convData = await API.get('/messages/conversations');
-      const svConv = convData?.conversations?.find(c =>
-        c.partner?.role === 'supervisor' || c.partner?.role === 'assistant'
-      );
-      if (svConv) {
-        openChat(svConv.partner.id);
-      } else {
-        // No conversation yet — find supervisor from staff list and show their profile ready to chat
-        const staffData = await API.get('/auth/staff');
-        const supervisors = (staffData?.staff || []).filter(s => s.role === 'supervisor' || s.role === 'assistant');
-        if (supervisors.length > 0) {
-          // Show supervisor as a conversation option even with no messages
-          const el = $('conv-list-inner'); if (el) {
-            el.innerHTML = supervisors.map(sv => {
-              const init = sv.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
-              return `<div class="conv-item" onclick="openChat('${sv.id}')">
-                <div class="conv-avatar">${init}</div>
-                <div class="conv-info">
-                  <div class="conv-name">${sv.name} <span class="conv-role-tag">${cap(sv.role)}</span></div>
-                  <div class="conv-last">Tap to start a conversation</div>
-                </div>
-              </div>`;
-            }).join('');
-          }
-        }
-      }
-    } catch(e) { console.warn('Messages load error:', e); }
-  }
 }
 
 async function loadConvList() {
-  const el=$('conv-list-inner'); if(!el) return;
+  const el = $('conv-list-inner'); if (!el) return;
+  el.innerHTML = '<div style="padding:12px 16px;font-size:.83rem;color:#94A3B8">Loading...</div>';
   try {
-    const data=await API.get('/messages/conversations');
-    const convs=data?.conversations||[];
-    if(!convs.length){el.innerHTML='<div style="padding:16px;font-size:.83rem;color:var(--text-3)">No conversations yet.</div>';return;}
-    el.innerHTML=convs.map(c=>{
-      const p=c.partner, last=c.lastMessage;
-      const lastText=last?(last.text.length>38?last.text.substring(0,38)+'…':last.text):'No messages yet';
-      const init=p.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
-      const isActive=activeChatPartnerId===p.id;
-      return `<div class="conv-item ${isActive?'conv-active':''} ${c.unread?'conv-unread':''}" onclick="openChat('${p.id}')">
-        <div class="conv-avatar">${init}</div>
+    const data = await API.get('/messages/conversations');
+    const convs = data?.conversations || [];
+    if (!convs.length) {
+      el.innerHTML = '<div style="padding:16px;font-size:.83rem;color:#94A3B8">No staff found.</div>';
+      return;
+    }
+    el.innerHTML = convs.map(c => {
+      const p = c.partner, last = c.lastMessage;
+      const lastText = last
+        ? (last.text.length > 38 ? last.text.substring(0, 38) + '…' : last.text)
+        : 'Tap to start a conversation';
+      const init = p.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      const isActive = activeChatPartnerId === p.id;
+      const avatarHtml = p.avatarUrl
+        ? `<img src="${p.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`
+        : init;
+      return `<div class="conv-item ${isActive ? 'conv-active' : ''} ${c.unread ? 'conv-unread' : ''}" onclick="openChat('${p.id}')">
+        <div class="conv-avatar">${avatarHtml}</div>
         <div class="conv-info">
           <div class="conv-name">${p.name} <span class="conv-role-tag">${cap(p.role)}</span></div>
           <div class="conv-last">${lastText}</div>
         </div>
-        ${c.unread?`<div class="conv-unread-dot">${c.unread}</div>`:''}
+        ${c.unread ? `<div class="conv-unread-dot">${c.unread}</div>` : ''}
       </div>`;
     }).join('');
-  } catch(e){}
+  } catch(e) {
+    el.innerHTML = '<div style="padding:16px;font-size:.83rem;color:#EF4444">Could not load conversations.</div>';
+  }
 }
 
 async function openChat(partnerId) {
