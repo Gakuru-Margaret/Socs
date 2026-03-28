@@ -217,23 +217,16 @@ function initUI() {
 }
 
 function setAvatarAll(url, init) {
-  const imgHtml = url
-    ? `<img src="${url}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`
-    : (init || '?');
+  // Inline style forces the image to stay inside its circular container
+  const imgStyle = 'display:block;width:100%;height:100%;object-fit:cover;border-radius:50%;flex-shrink:0;min-width:0;min-height:0';
 
-  // Update all avatar elements
   ['user-avatar', 'sb-avatar', 'profile-avatar-big'].forEach(id => {
     const el = $(id); if (!el) return;
     if (url) {
-      el.innerHTML = `<img src="${url}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+      el.innerHTML = `<img src="${url}" alt="" style="${imgStyle}"/>`;
     } else {
       el.innerHTML = init || '?';
     }
-  });
-
-  // Also update any img elements that are already loaded avatars
-  document.querySelectorAll('.user-avatar img, .sb-avatar img, .profile-avatar img').forEach(img => {
-    if (url) img.src = url;
   });
 }
 
