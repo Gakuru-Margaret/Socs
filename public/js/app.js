@@ -1421,20 +1421,58 @@ async function loadConvList() {
 }
 
 async function openChat(partnerId) {
-  activeChatPartnerId=partnerId;
-  $('chat-panel')?.classList.remove('hidden');
+  activeChatPartnerId = partnerId;
+
+  // Mobile: slide conv list out, slide chat in
+  const convList  = document.querySelector('.conv-list');
+  const chatPanel = $('chat-panel');
+  const isMobile  = window.innerWidth <= 900;
+  if (isMobile && convList && chatPanel) {
+    convList.classList.add('chat-open');
+    chatPanel.classList.add('chat-open');
+  }
+
+  chatPanel?.classList.remove('hidden');
   $('chat-empty-state')?.classList.add('hidden');
+
   try {
-    const convData=await API.get('/messages/conversations');
-    const conv=convData?.conversations?.find(c=>c.partner?.id===partnerId);
-    const p=conv?.partner||{name:'—',role:'—'};
-    const init=p.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
-    setText('chat-partner-name', p.name); setText('chat-partner-role', cap(p.role)); setText('chat-partner-init', init);
+    const convData = await API.get('/messages/conversations');
+    const conv = convData?.conversations?.find(c => c.partner?.id === partnerId);
+    // If not in convs list yet (new chat) — find from full list
+    const p = conv?.partner || convData?.conversations?.find(c => c.partner?.id === partnerId)?.partner;
+
+    // Get partner details
+    const partner = p || { name: '—', role: '—', avatarUrl: null };
+
+    // Try to get from staffCache if available
+    const cached = (_staffCache || []).find(s => s.id === partnerId);
+    const pName  = cached?.name  || partner.name  || '—';
+    const pRole  = cached?.role  || partner.role  || '—';
+    const pPhoto = cached?.avatarUrl || partner.avatarUrl || null;
+    const pInit  = pName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+    setText('chat-partner-name', pName);
+    setText('chat-partner-role', cap(pRole));
+
+    // Set partner avatar with photo if available
+    const pAvatar = $('chat-partner-avatar');
+    if (pAvatar) {
+      if (pPhoto) {
+        pAvatar.innerHTML = `<img src="${pPhoto}" alt="${pInit}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+        pAvatar.style.position = 'relative';
+      } else {
+        pAvatar.innerHTML = pInit;
+      }
+    }
+
+    // Set header init fallback
+    setText('chat-partner-init', pInit);
+
     socket?.emit('mark-messages-read', { fromId: partnerId });
     await loadChatMessages(partnerId);
     await loadConvList();
     loadMsgBadge();
-  } catch(e){}
+  } catch(e) { console.warn('openChat error:', e); }
 }
 
 async function loadChatMessages(partnerId) {
@@ -1476,10 +1514,19 @@ async function sendMessage() {
 
 async function loadMsgBadge() {
   try {
-    const data=await API.get('/messages/conversations');
-    const unread=(data?.conversations||[]).reduce((a,c)=>a+(c.unread||0),0);
-    const badge=$('msg-badge'); if(badge){ badge.textContent=unread; badge.classList.toggle('hidden',unread===0); }
-  } catch(e){}
+    const data = await API.get('/messages/conversations');
+    const unread = (data?.conversations || []).reduce((a,c) => a + (c.unread || 0), 0);
+    const badge = $('msg-badge'); if (badge) { badge.textContent = unread; badge.classList.toggle('hidden', unread === 0); }
+  } catch(e) {}
+}
+
+function goBackToContacts() {
+  activeChatPartnerId = null;
+  const convList  = document.querySelector('.conv-list');
+  const chatPanel = $('chat-panel');
+  convList?.classList.remove('chat-open');
+  chatPanel?.classList.remove('chat-open');
+  loadConvList();
 }
 
 // ── USER MENU ───────────────────────────────────────────────
@@ -1554,6 +1601,7 @@ window.switchTab=switchTab; window.toggleTask=toggleTask; window.setWellness=set
 window.dismissAnn=dismissAnn; window.dismissNotif=dismissNotif;
 window.openWorkerModal=openWorkerModal; window.closeWorkerModal=closeWorkerModal;
 window.closeAddStaffModal=closeAddStaffModal; window.submitAddStaff=submitAddStaff;
+window.goBackToContacts=goBackToContacts;
 window.openAssignForWorker=openAssignForWorker; window.openAssignForWorkerById=openAssignForWorkerById;
 window.messageWorkerNow=messageWorkerNow; window.msgWorkerDirect=msgWorkerDirect;
 window.markAssignDone=markAssignDone; window.deleteAssign=deleteAssign;
