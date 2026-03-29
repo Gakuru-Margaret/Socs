@@ -1269,3 +1269,90 @@ input,textarea,select{font-family:inherit;color:#1E293B}
   .app-main{margin-left:0!important;width:100%!important;padding:0!important}
   .card{box-shadow:none;border:1px solid #ccc}
 }
+
+/* ── PROFESSIONAL SKELETON LOADING ── */
+@keyframes shimmer{0%{background-position:-700px 0}100%{background-position:700px 0}}
+.skeleton{
+  background:linear-gradient(90deg,#E2E8F0 25%,#F1F5F9 50%,#E2E8F0 75%);
+  background-size:700px 100%;animation:shimmer 1.4s infinite;border-radius:6px;
+}
+.skeleton-line{height:14px;margin-bottom:10px;border-radius:6px}
+.skeleton-line.w-80{width:80%}
+.skeleton-line.w-60{width:60%}
+.skeleton-line.w-40{width:40%}
+.skeleton-circle{border-radius:50%}
+.skeleton-card{background:#fff;border:1px solid #E2E8F0;border-radius:16px;padding:18px;margin-bottom:12px}
+
+/* ── PAGE LOADER OVERLAY (first load) ── */
+#page-loader{
+  position:fixed;inset:0;background:#F1F5F9;z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  transition:opacity .4s ease;
+}
+#page-loader.fade-out{opacity:0;pointer-events:none}
+.loader-logo{font-family:'Space Mono',monospace;font-size:2rem;font-weight:700;color:#1E293B;letter-spacing:.08em}
+.loader-logo span{color:#10B981}
+.loader-bar-wrap{width:200px;height:3px;background:#E2E8F0;border-radius:3px;overflow:hidden}
+.loader-bar{height:100%;background:#10B981;border-radius:3px;animation:loaderPulse 1.2s ease-in-out infinite}
+@keyframes loaderPulse{0%{width:0%;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0%;margin-left:100%}}
+.loader-text{font-size:.82rem;color:#94A3B8;font-family:'DM Sans',sans-serif}
+
+/* ── CONV AVATAR FIX — profile photo in messages ── */
+.conv-avatar{
+  width:40px;height:40px;border-radius:50%;background:#E2E8F0;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:.85rem;color:#1E293B;flex-shrink:0;
+  overflow:hidden;position:relative;
+}
+.conv-avatar img{
+  position:absolute;top:0;left:0;
+  width:100%;height:100%;object-fit:cover;border-radius:50%;
+}
+
+/* ── DISMISSED NOTIFICATIONS — fade out ── */
+.notif-item.dismissing{
+  opacity:0;transform:translateX(20px);
+  transition:opacity .3s,transform .3s;
+  pointer-events:none;
+}
+
+/* ── MESSAGE SKELETON LOADING ── */
+.msg-skeleton-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;border-bottom:1px solid #F1F5F9;
+}
+.msg-skeleton-avatar{
+  width:40px;height:40px;border-radius:50%;flex-shrink:0;
+}
+.msg-skeleton-lines{flex:1;display:flex;flex-direction:column;gap:6px}
+
+/* ── WORKER MODAL AVATAR ── */
+#wm-avatar{
+  width:58px;height:58px;border-radius:50%;background:#1E293B;color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.3rem;
+  flex-shrink:0;overflow:hidden;position:relative;
+}
+#wm-avatar img{
+  position:absolute;top:0;left:0;
+  width:100%;height:100%;object-fit:cover;border-radius:50%;
+}
+
+/* ── ADD STAFF BUTTON in tab header ── */
+#add-staff-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-top:8px;
+}
+@media(max-width:768px){
+  #add-staff-btn{width:100%;justify-content:center;margin-top:10px}
+}
+
+/* ── STAFF CARD AVATAR WITH PHOTO ── */
+.sc-avatar{
+  width:44px;height:44px;border-radius:50%;background:#1E293B;color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;
+  flex-shrink:0;overflow:hidden;border:2px solid rgba(16,185,129,.2);position:relative;
+}
+.sc-avatar img{
+  position:absolute;top:0;left:0;
+  width:100%;height:100%;object-fit:cover;border-radius:50%;
+}

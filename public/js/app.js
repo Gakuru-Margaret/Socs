@@ -103,7 +103,15 @@ function toast(msg, type='info') {
   setTimeout(()=>{ el.style.cssText='opacity:0;transform:translateX(30px);transition:all .3s'; setTimeout(()=>el.remove(),300); }, 3500);
 }
 
-function showLoading(id) { const e=$(id); if(e) e.innerHTML='<div class="log-loading">Loading...</div>'; }
+function showLoading(id) {
+  const e = $(id); if (!e) return;
+  e.innerHTML = `
+    <div style="padding:8px 0">
+      <div class="skeleton skeleton-line w-80" style="height:12px;margin-bottom:8px"></div>
+      <div class="skeleton skeleton-line w-60" style="height:12px;margin-bottom:8px"></div>
+      <div class="skeleton skeleton-line w-40" style="height:12px;margin-bottom:8px"></div>
+    </div>`;
+}
 function showEmpty(id, icon, msg) { const e=$(id); if(e) e.innerHTML=`<div class="empty-state"><div class="empty-icon">${icon}</div><p>${msg}</p></div>`; }
 
 // ── INIT ──────────────────────────────────────────────────
@@ -147,6 +155,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   $('sb-logout')?.addEventListener('click', logout);
   $('logout-btn')?.addEventListener('click', logout);
+
+  // Dismiss page loader smoothly
+  const loader = document.getElementById('page-loader');
+  if (loader) {
+    loader.classList.add('fade-out');
+    setTimeout(() => loader.remove(), 450);
+  }
 });
 
 // ── SOCKET.IO ─────────────────────────────────────────────
@@ -665,14 +680,22 @@ function initNotifBell() {
 async function loadNotifications(filter='all') {
   showLoading('notif-list');
   try {
-    await API.patch('/notifications/read-all'); // mark all read in DB
-    const data=await API.get('/notifications');
-    const all=data?.notifications||[];
-    const items=filter==='all'?all:filter==='unread'?all.filter(n=>!n.isRead):all.filter(n=>n.type===filter);
+    const data = await API.get('/notifications');
+    const all = (data?.notifications || []).filter(n => !n.isDismissed); // hide dismissed
+    const items = filter === 'all'   ? all
+                : filter === 'unread' ? all.filter(n => !n.isRead)
+                : all.filter(n => n.type === filter);
+
+    // Mark all as read in DB silently
+    await API.patch('/notifications/read-all').catch(() => {});
     updateNotifBadge(0);
-    if(!items.length){showEmpty('notif-list','🔔','No notifications.');return;}
-    $('notif-list').innerHTML=items.map(n=>`
-      <div class="notif-item">
+
+    if (!items.length) {
+      showEmpty('notif-list', '✓', 'All caught up — no notifications.');
+      return;
+    }
+    $('notif-list').innerHTML = items.map(n => `
+      <div class="notif-item ${!n.isRead ? 'unread' : ''}" id="notif-${n.id}">
         <div class="notif-icon ${notifClass(n.type)}">${notifIcon(n.type)}</div>
         <div class="notif-body">
           <div class="notif-title">${n.title}</div>
@@ -681,28 +704,33 @@ async function loadNotifications(filter='all') {
         </div>
         <button class="notif-dismiss" onclick="dismissNotif('${n.id}')" title="Dismiss">✕</button>
       </div>`).join('');
-  } catch(e) { showEmpty('notif-list','⚠️','Could not load notifications.'); }
+  } catch(e) { showEmpty('notif-list', '⚠', 'Could not load notifications.'); }
 }
 
 async function loadNotifBadge() {
   try {
-    const data=await API.get('/notifications');
-    const count=(data?.notifications||[]).filter(n=>!n.isRead&&!n.isDismissed).length;
+    const data = await API.get('/notifications');
+    const count = (data?.notifications || []).filter(n => !n.isRead && !n.isDismissed).length;
     updateNotifBadge(count);
   } catch(e) {}
 }
 
 function updateNotifBadge(count) {
-  const dot=$('notif-dot'), badge=$('notif-badge');
+  const dot = $('notif-dot'), badge = $('notif-badge');
   const n = count !== undefined ? count : 0;
-  if(dot)   dot.classList.toggle('hidden', n===0);
-  if(badge) { badge.textContent=n; badge.classList.toggle('hidden',n===0); }
+  if (dot)   dot.classList.toggle('hidden', n === 0);
+  if (badge) { badge.textContent = n; badge.classList.toggle('hidden', n === 0); }
 }
 
 async function dismissNotif(id) {
+  const el = $('notif-' + id);
+  if (el) {
+    el.classList.add('dismissing');
+    setTimeout(() => el.remove(), 320);
+  }
   try {
     await API.patch(`/notifications/${id}/dismiss`);
-    loadNotifications(document.querySelector('[data-nfilter].active')?.dataset.nfilter||'all');
+    loadNotifBadge();
   } catch(e) {}
 }
 
@@ -907,8 +935,20 @@ async function declineLeave(id) { try { await API.patch(`/leave/${id}`,{status:'
 let _smFilter='all', _staffCache=[];
 async function loadStaffMgmt() {
   try {
-    const data=await API.get('/auth/staff');
-    _staffCache=data?.staff||[];
+    // Inject "Add Staff" button into the tab header if not already there
+    const tabHeader = document.querySelector('#tab-staff-mgmt .tab-header');
+    if (tabHeader && !$('add-staff-btn')) {
+      const btn = document.createElement('button');
+      btn.id = 'add-staff-btn';
+      btn.className = 'btn btn-primary btn-sm';
+      btn.style.cssText = 'margin-top:8px';
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Staff`;
+      btn.onclick = () => $('add-staff-modal')?.classList.remove('hidden');
+      tabHeader.appendChild(btn);
+    }
+
+    const data = await API.get('/auth/staff');
+    _staffCache = data?.staff || [];
     const top=[..._staffCache].sort((a,b)=>(b.tasksDone/Math.max(b.tasksTotal,1))-(a.tasksDone/Math.max(a.tasksTotal,1)))[0];
     setText('sm-in-count',    _staffCache.filter(s=>s.status==='in').length);
     setText('sm-out-count',   _staffCache.filter(s=>s.status==='out').length);
@@ -940,7 +980,7 @@ function renderStaffCardsList(staff) {
     const sc=pct>=85?'var(--accent)':pct>=60?'var(--amber)':'var(--red)';
     return `<div class="staff-card ${s.status==='out'?'card-out':''}" onclick="openWorkerModal('${s.id}')">
       <div class="sc-top">
-        <div class="sc-avatar">${s.avatarUrl?`<img src="${s.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`:s.initials}</div>
+        <div class="sc-avatar">${s.avatarUrl ? `<img src="${s.avatarUrl}" alt="${s.initials}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:50%"/>` : s.initials}</div>
         <div><div class="sc-name">${s.name}</div><div class="sc-role">${cap(s.role)} · ${s.section||''}</div></div>
         ${s.status==='in'?`<span class="status-in-pill sc-status-pill"><span class="live-dot"></span>In</span>`:`<span class="status-out-pill sc-status-pill">Out</span>`}
       </div>
@@ -965,29 +1005,112 @@ function renderStaffCardsList(staff) {
   }).join('');
 }
 
-// Worker Modal
+// Worker Modal — shows real data + profile photo
 async function openWorkerModal(id) {
-  currentWorker=_staffCache.find(s=>s.id===id); if(!currentWorker) return;
-  const w=currentWorker;
-  setText('wm-name',w.name); setText('wm-role',cap(w.role)+' — '+(w.section||''));
-  setText('wm-id','ID: '+w.staffId); setText('wm-avatar',w.initials);
-  setText('wm-days',w.daysWorked||'—'); setText('wm-tasks-done',w.tasksDone+'/'+w.tasksTotal);
-  setText('wm-score',w.tasksTotal?Math.round(w.tasksDone/w.tasksTotal*100)+'%':'—'); setText('wm-late',w.isLate?'Yes':'No');
-  const sb=$('wm-status-badge'); if(sb) sb.innerHTML=w.status==='in'?`<span class="status-in-pill"><span class="live-dot"></span>In ${fmtTime(w.clockIn)}</span>`:`<span class="status-out-pill">Not Clocked In</span>`;
-  document.querySelectorAll('.wm-tab').forEach(t=>{ t.onclick=()=>{ document.querySelectorAll('.wm-tab').forEach(x=>x.classList.remove('active')); t.classList.add('active'); renderWorkerTab(t.dataset.wtab,w); }; });
+  currentWorker = _staffCache.find(s => s.id === id);
+  if (!currentWorker) return;
+  const w = currentWorker;
+
+  // Avatar — show profile photo if available, else initials
+  const avatarEl = $('wm-avatar');
+  if (avatarEl) {
+    if (w.avatarUrl) {
+      avatarEl.innerHTML = `<img src="${w.avatarUrl}" alt="${w.initials}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+      avatarEl.style.position = 'relative';
+    } else {
+      avatarEl.textContent = w.initials || '?';
+    }
+  }
+
+  setText('wm-name', w.name);
+  setText('wm-role', cap(w.role) + (w.section ? ' — ' + w.section : ''));
+  setText('wm-id', 'ID: ' + w.staffId);
+  setText('wm-days', w.daysWorked ?? '—');
+  setText('wm-tasks-done', (w.tasksDone || 0) + '/' + (w.tasksTotal || 0));
+
+  const perf = w.tasksTotal ? Math.round((w.tasksDone / w.tasksTotal) * 100) : 0;
+  setText('wm-score', perf + '%');
+  setText('wm-late', w.isLate ? 'Late' : 'On Time');
+
+  const sb = $('wm-status-badge');
+  if (sb) sb.innerHTML = w.status === 'in'
+    ? `<span class="status-in-pill"><span class="live-dot"></span>Clocked In ${fmtTime(w.clockIn)}</span>`
+    : `<span class="status-out-pill">Not Clocked In</span>`;
+
+  // Set up tabs
+  document.querySelectorAll('.wm-tab').forEach(t => {
+    t.onclick = () => {
+      document.querySelectorAll('.wm-tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      renderWorkerTab(t.dataset.wtab, w);
+    };
+  });
   document.querySelector('.wm-tab')?.click();
   $('worker-modal')?.classList.remove('hidden');
 }
 
 function renderWorkerTab(tab, w) {
-  const el=$('wm-tab-content'); if(!el) return;
-  if(tab==='today') {
-    el.innerHTML=`<div style="padding:12px;text-align:center;color:var(--text-3)">Tasks: ${w.tasksDone}/${w.tasksTotal} complete today</div>`;
-  } else if(tab==='attendance') {
-    el.innerHTML=`<div style="padding:12px;font-size:.85rem;color:var(--text-2)">Clock In: ${fmtTime(w.clockIn)}&nbsp;&nbsp;Clock Out: ${fmtTime(w.clockOut)||'Active'}</div>`;
-  } else if(tab==='performance') {
-    const pct=w.tasksTotal?Math.round(w.tasksDone/w.tasksTotal*100):0;
-    el.innerHTML=`<div class="wm-perf-row"><div class="wm-perf-label"><span>Tasks Today</span><span style="font-weight:700;color:var(--accent)">${pct}%</span></div><div class="wm-perf-bar-wrap"><div class="wm-perf-bar" style="width:${pct}%;background:var(--accent)"></div></div></div>`;
+  const el = $('wm-tab-content'); if (!el) return;
+  const pct = w.tasksTotal ? Math.round((w.tasksDone / w.tasksTotal) * 100) : 0;
+  const col = pct >= 80 ? '#10B981' : pct >= 50 ? '#F59E0B' : '#EF4444';
+
+  if (tab === 'today') {
+    if (!w.tasksTotal) {
+      el.innerHTML = `<div style="padding:20px;text-align:center;color:#94A3B8;font-size:.88rem">No duty tasks assigned for this role today.</div>`;
+      return;
+    }
+    el.innerHTML = `
+      <div style="padding:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <span style="font-weight:700;color:#1E293B">Tasks Today</span>
+          <span style="font-family:'Space Mono',monospace;font-size:.95rem;font-weight:700;color:${col}">${w.tasksDone}/${w.tasksTotal} done</span>
+        </div>
+        <div style="background:#E2E8F0;border-radius:8px;height:8px;overflow:hidden;margin-bottom:8px">
+          <div style="width:${pct}%;height:100%;background:${col};border-radius:8px;transition:width .5s"></div>
+        </div>
+        <div style="font-size:.8rem;color:#64748B">${pct}% complete — ${w.tasksTotal - w.tasksDone} remaining</div>
+      </div>`;
+  } else if (tab === 'attendance') {
+    el.innerHTML = `
+      <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;padding:10px 14px;background:#F8FAFC;border-radius:10px;border:1px solid #E2E8F0">
+          <span style="color:#64748B;font-size:.85rem">Days This Month</span>
+          <span style="font-weight:700;color:#1E293B;font-family:'Space Mono',monospace">${w.daysWorked ?? 0}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:10px 14px;background:#F8FAFC;border-radius:10px;border:1px solid #E2E8F0">
+          <span style="color:#64748B;font-size:.85rem">Today Clock In</span>
+          <span style="font-weight:700;color:#10B981;font-family:'Space Mono',monospace">${fmtTime(w.clockIn) || 'Not in yet'}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:10px 14px;background:#F8FAFC;border-radius:10px;border:1px solid #E2E8F0">
+          <span style="color:#64748B;font-size:.85rem">Clock Out</span>
+          <span style="font-weight:700;color:#64748B;font-family:'Space Mono',monospace">${fmtTime(w.clockOut) || (w.status === 'in' ? 'Still active' : '—')}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:10px 14px;background:#F8FAFC;border-radius:10px;border:1px solid #E2E8F0">
+          <span style="color:#64748B;font-size:.85rem">Punctuality Today</span>
+          <span style="font-weight:700;color:${w.isLate ? '#F59E0B' : '#10B981'};font-size:.85rem">${w.isLate ? 'Late arrival' : 'On time'}</span>
+        </div>
+      </div>`;
+  } else if (tab === 'performance') {
+    el.innerHTML = `
+      <div style="padding:16px">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="font-size:2.2rem;font-weight:700;color:${col};font-family:'Space Mono',monospace">${pct}%</div>
+          <div style="font-size:.8rem;color:#64748B">Overall task completion today</div>
+        </div>
+        <div style="background:#E2E8F0;border-radius:8px;height:10px;overflow:hidden;margin-bottom:16px">
+          <div style="width:${pct}%;height:100%;background:${col};border-radius:8px;transition:width .6s"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="padding:10px;background:#F0FDF4;border-radius:10px;border:1px solid #D1FAE5;text-align:center">
+            <div style="font-size:1.2rem;font-weight:700;color:#10B981">${w.tasksDone || 0}</div>
+            <div style="font-size:.72rem;color:#64748B">Completed</div>
+          </div>
+          <div style="padding:10px;background:#FFF7ED;border-radius:10px;border:1px solid #FED7AA;text-align:center">
+            <div style="font-size:1.2rem;font-weight:700;color:#F59E0B">${(w.tasksTotal || 0) - (w.tasksDone || 0)}</div>
+            <div style="font-size:.72rem;color:#64748B">Remaining</div>
+          </div>
+        </div>
+      </div>`;
   }
 }
 
@@ -996,6 +1119,26 @@ function openAssignForWorker()         { closeWorkerModal(); switchTab('task-ass
 function openAssignForWorkerById(id)   { currentWorker=_staffCache.find(s=>s.id===id); openAssignForWorker(); }
 function messageWorkerNow()            { if(currentWorker) msgWorkerDirect(currentWorker.id); else closeWorkerModal(); }
 function msgWorkerDirect(id)           { closeWorkerModal(); switchTab('messages'); setTimeout(()=>openChat(id),120); }
+
+function closeAddStaffModal() {
+  $('add-staff-modal')?.classList.add('hidden');
+  ['ns-name','ns-staffid','ns-password','ns-phone','ns-email'].forEach(id => setVal(id,''));
+}
+async function submitAddStaff() {
+  const name=$('ns-name')?.value.trim(), staffId=$('ns-staffid')?.value.trim().toUpperCase();
+  const role=$('ns-role')?.value, password=$('ns-password')?.value;
+  const phone=$('ns-phone')?.value.trim(), email=$('ns-email')?.value.trim();
+  if(!name||!staffId||!role||!password){toast('Name, Staff ID, Role and Password required','error');return;}
+  if(password.length<6){toast('Password must be at least 6 characters','error');return;}
+  const btn=$('ns-submit-btn');
+  if(btn){btn.disabled=true;btn.textContent='Adding...';}
+  try {
+    await API.post('/auth/staff',{name,staffId,role,password,phone,email});
+    toast(`${name} added — ID: ${staffId}`,'success');
+    closeAddStaffModal(); await loadStaffMgmt();
+  } catch(e){ toast(e.message||'Failed to add staff','error'); }
+  finally { if(btn){btn.disabled=false;btn.textContent='Add Staff Member';} }
+}
 
 // ═══════════════════════════════════════════════════════════
 //  TASK ASSIGNMENT
@@ -1237,7 +1380,15 @@ async function loadMessagesTab() {
 
 async function loadConvList() {
   const el = $('conv-list-inner'); if (!el) return;
-  el.innerHTML = '<div style="padding:12px 16px;font-size:.83rem;color:#94A3B8">Loading...</div>';
+  // Show skeleton while loading
+  el.innerHTML = [1,2,3].map(() => `
+    <div class="msg-skeleton-item">
+      <div class="msg-skeleton-avatar skeleton" style="width:40px;height:40px;border-radius:50%"></div>
+      <div class="msg-skeleton-lines">
+        <div class="skeleton skeleton-line" style="height:12px;width:65%"></div>
+        <div class="skeleton skeleton-line" style="height:10px;width:45%"></div>
+      </div>
+    </div>`).join('');
   try {
     const data = await API.get('/messages/conversations');
     const convs = data?.conversations || [];
@@ -1248,15 +1399,15 @@ async function loadConvList() {
     el.innerHTML = convs.map(c => {
       const p = c.partner, last = c.lastMessage;
       const lastText = last
-        ? (last.text.length > 38 ? last.text.substring(0, 38) + '…' : last.text)
+        ? (last.text.length > 40 ? last.text.substring(0, 40) + '…' : last.text)
         : 'Tap to start a conversation';
       const init = p.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
       const isActive = activeChatPartnerId === p.id;
-      const avatarHtml = p.avatarUrl
-        ? `<img src="${p.avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`
+      const avatarInner = p.avatarUrl
+        ? `<img src="${p.avatarUrl}" alt="${init}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:50%"/>`
         : init;
       return `<div class="conv-item ${isActive ? 'conv-active' : ''} ${c.unread ? 'conv-unread' : ''}" onclick="openChat('${p.id}')">
-        <div class="conv-avatar">${avatarHtml}</div>
+        <div class="conv-avatar" style="position:relative">${avatarInner}</div>
         <div class="conv-info">
           <div class="conv-name">${p.name} <span class="conv-role-tag">${cap(p.role)}</span></div>
           <div class="conv-last">${lastText}</div>
@@ -1265,7 +1416,7 @@ async function loadConvList() {
       </div>`;
     }).join('');
   } catch(e) {
-    el.innerHTML = '<div style="padding:16px;font-size:.83rem;color:#EF4444">Could not load conversations.</div>';
+    el.innerHTML = '<div style="padding:16px;font-size:.83rem;color:#EF4444">Could not load. Check connection.</div>';
   }
 }
 
@@ -1402,6 +1553,7 @@ function logout(){localStorage.removeItem('socs_token');localStorage.removeItem(
 window.switchTab=switchTab; window.toggleTask=toggleTask; window.setWellness=setWellness;
 window.dismissAnn=dismissAnn; window.dismissNotif=dismissNotif;
 window.openWorkerModal=openWorkerModal; window.closeWorkerModal=closeWorkerModal;
+window.closeAddStaffModal=closeAddStaffModal; window.submitAddStaff=submitAddStaff;
 window.openAssignForWorker=openAssignForWorker; window.openAssignForWorkerById=openAssignForWorkerById;
 window.messageWorkerNow=messageWorkerNow; window.msgWorkerDirect=msgWorkerDirect;
 window.markAssignDone=markAssignDone; window.deleteAssign=deleteAssign;
